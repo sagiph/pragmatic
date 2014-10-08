@@ -12,6 +12,7 @@
     <url>https://github.com/leanovate/pragmatic</url>
     <modules>
         <module>pragmatic-ioc</module>
+        <module>pragmatic-ioc-test-support</module>
     </modules>
     <licenses>
         <license>
