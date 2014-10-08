@@ -1,13 +1,13 @@
 package de.leanovate.pragmatic.ioc;
 
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public class SingletonScope implements Scope {
-    private ThreadLocal<Set<String>> createStack = ThreadLocal.withInitial(HashSet<String>::new);
+    private ThreadLocal<LinkedList<String>> createStack = ThreadLocal.withInitial(LinkedList<String>::new);
 
     private volatile Map<String, Object> instances = new HashMap<>();
 
@@ -22,15 +22,16 @@ public class SingletonScope implements Scope {
                 instance = (T) instances.get(name);
 
                 if (instance == null) {
-                    if (createStack.get().contains(name)) {
-                        throw new RuntimeException("Cyclic reference to '" + name + "'");
+                    final LinkedList<String> stack = createStack.get();
+                    if (stack.contains(name)) {
+                        throw new CyclicDependencyException(stack);
                     }
-                    createStack.get().add(name);
-                    instance = supplier.get();
+                    stack.add(name);
+                    instance = Objects.requireNonNull(supplier.get(), () -> "Instantiation of '" + name + "' failed");
                     instances = new HashMap<>(instances);
                     instances.put(name, instance);
-                    createStack.get().remove(name);
-                    if (createStack.get().isEmpty()) {
+                    stack.removeLast();
+                    if (stack.isEmpty()) {
                         createStack.remove();
                     }
                 }
