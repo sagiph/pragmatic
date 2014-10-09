@@ -7,7 +7,7 @@
     <packaging>pom</packaging>
     <name>pragmatic</name>
     <description>
-
+        A collection of pragmatic little libraries.
     </description>
     <url>https://github.com/leanovate/pragmatic</url>
     <modules>
