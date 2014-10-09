@@ -44,7 +44,7 @@ public class SingletonScope extends AbstractScope {
     }
 
     private synchronized void addinstance(final String key, final Object instance) {
-        final Map<String, Object> newInstances = new HashMap<>();
+        final Map<String, Object> newInstances = new HashMap<>(instances);
         newInstances.put(key, instance);
         this.instances = newInstances;
     }
