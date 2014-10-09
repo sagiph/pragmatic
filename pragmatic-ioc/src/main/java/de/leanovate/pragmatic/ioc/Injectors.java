@@ -1,5 +1,6 @@
 package de.leanovate.pragmatic.ioc;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -16,6 +17,6 @@ public class Injectors {
      */
     public static <T> Injector<T> singleton(final Class<T> injectedClass, final Supplier<? extends T> supplier) {
 
-        return new ScopedInjector<>(injectedClass.getName(), Scopes::getSingletonScope, supplier);
+        return new ScopedInjector<>(injectedClass, Optional.empty(), Scopes::getSingletonScope, supplier);
     }
 }

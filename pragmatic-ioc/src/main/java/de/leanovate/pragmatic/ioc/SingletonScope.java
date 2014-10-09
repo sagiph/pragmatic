@@ -1,42 +1,45 @@
 package de.leanovate.pragmatic.ioc;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
-public class SingletonScope implements Scope {
-    private ThreadLocal<LinkedList<String>> createStack = ThreadLocal.withInitial(LinkedList<String>::new);
-
+public class SingletonScope extends AbstractScope {
     private volatile Map<String, Object> instances = new HashMap<>();
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getInstance(final String name, final Supplier<T> supplier) {
+    public <T> T getInstance(final Class<T> injectedClass, final Optional<String> name,
+            final Supplier<? extends T> supplier) {
 
-        T instance = (T) instances.get(name);
+        final String key = name.map((n) -> injectedClass.getName() + ":" + n).orElse(injectedClass.getName());
+        T instance = (T) instances.get(key);
 
         if (instance == null) {
             synchronized (this) {
-                instance = (T) instances.get(name);
+                instance = (T) instances.get(key);
 
                 if (instance == null) {
-                    final LinkedList<String> stack = createStack.get();
-                    if (stack.contains(name)) {
-                        throw new CyclicDependencyException(stack);
-                    }
-                    stack.add(name);
-                    instance = Objects.requireNonNull(supplier.get(), () -> "Instantiation of '" + name + "' failed");
-                    instances = new HashMap<>(instances);
-                    instances.put(name, instance);
-                    stack.removeLast();
-                    if (stack.isEmpty()) {
-                        createStack.remove();
-                    }
+                    instance = createInstance(key, supplier);
+                    addinstance(key, instance);
                 }
             }
         }
         return instance;
+    }
+
+    @Override
+    public void bind(final Object instance) {
+
+        Objects.requireNonNull(instance);
+        addinstance(instance.getClass().getName(), instance);
+    }
+
+    private synchronized void addinstance(final String key, final Object instance) {
+        final Map<String, Object> newInstances = new HashMap<>();
+        newInstances.put(key, instance);
+        this.instances = newInstances;
     }
 }

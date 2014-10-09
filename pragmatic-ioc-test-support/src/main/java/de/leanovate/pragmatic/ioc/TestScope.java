@@ -2,24 +2,36 @@ package de.leanovate.pragmatic.ioc;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
-public class TestScope implements Scope {
+public class TestScope extends AbstractScope {
     static ThreadLocal<Map<String, Object>> PER_THREAD_INSTANCES = ThreadLocal.withInitial(HashMap::new);
 
     @Override
-    public <T> T getInstance(final String name, final Supplier<T> supplier) {
+    public <T> T getInstance(Class<T> injectedClass, Optional<String> name, Supplier<? extends T> supplier) {
 
+        final String key = name.map((n) -> injectedClass.getName() + ":" + n).orElse(injectedClass.getName());
         final Map<String, Object> instances = PER_THREAD_INSTANCES.get();
 
         @SuppressWarnings("unchecked")
-        T instance = (T) instances.get(name);
+        T instance = (T) instances.get(key);
 
         if (instance == null) {
-            instance = supplier.get();
-            instances.put(name, instance);
+            instance = createInstance(key, supplier);
+            instances.put(key, instance);
         }
+
         return instance;
+    }
+
+    @Override
+    public void bind(final Object instance) {
+
+        Objects.requireNonNull(instance);
+        final Map<String, Object> instances = PER_THREAD_INSTANCES.get();
+        instances.put(instance.getClass().getName(), instance);
     }
 
     public void reset() {

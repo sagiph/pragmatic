@@ -2,6 +2,8 @@ package de.leanovate.pragmatic.ioc;
 
 import org.junit.Test;
 
+import java.util.Optional;
+
 public class SingletonScopeTest {
 
     SingletonScope singletonScope = new SingletonScope();
@@ -9,21 +11,21 @@ public class SingletonScopeTest {
     @Test(expected = CyclicDependencyException.class)
     public void testCycleDetection() {
 
-        singletonScope.getInstance("testCycleDetection", () ->
-                singletonScope.getInstance("testCycleDetection", () -> null));
+        singletonScope.getInstance(Object.class, Optional.of("testCycleDetection"), () ->
+                singletonScope.getInstance(Object.class, Optional.of("testCycleDetection"), () -> null));
     }
 
     @Test(expected = CyclicDependencyException.class)
     public void testCycleDetection2() {
 
-        singletonScope.getInstance("testCycleDetection2", () ->
-                singletonScope.getInstance("testCycleDetection2a", () ->
-                        singletonScope.getInstance("testCycleDetection2", () -> null)));
+        singletonScope.getInstance(Object.class, Optional.of("testCycleDetection2"), () ->
+                singletonScope.getInstance(Object.class, Optional.of("testCycleDetection2a"), () ->
+                        singletonScope.getInstance(Object.class, Optional.of("testCycleDetection2"), () -> null)));
     }
 
     @Test(expected = NullPointerException.class)
     public void testRequestNonNull() {
 
-        singletonScope.getInstance("notNull", () -> null);
+        singletonScope.getInstance(Object.class, Optional.of("notNull"), () -> null);
     }
 }

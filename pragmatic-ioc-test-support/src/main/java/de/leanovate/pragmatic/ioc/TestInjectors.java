@@ -10,10 +10,10 @@ public class TestInjectors {
         }
     }
 
-    public static <T> void define(Class<? super T> clazz, T instance) {
+    public static void bind(Object instance) {
 
         init();
-        TEST_SCOPE.define(clazz.getName(), instance);
+        TEST_SCOPE.bind(instance);
     }
 
     public static void reset() {

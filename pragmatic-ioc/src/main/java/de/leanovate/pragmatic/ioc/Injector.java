@@ -12,4 +12,11 @@ public interface Injector<T> {
      * @return the instance to inject
      */
     T inject();
+
+    /**
+     * Get the scope of this injector.
+     *
+     * @return the scope of injection
+     */
+    Scope getScope();
 }
