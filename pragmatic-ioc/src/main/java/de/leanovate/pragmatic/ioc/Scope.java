@@ -26,4 +26,12 @@ public interface Scope {
      * @param instance the instance of bind
      */
     void bind(Object instance);
+
+    /**
+     * Bind an existing instance to a specific class.
+     *
+     * @param injectedClass the injected class
+     * @param instance the instance
+     */
+    <T> void bind(Class<? super T> injectedClass, T instance);
 }

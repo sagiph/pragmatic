@@ -4,22 +4,29 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class TestScope extends AbstractScope {
     static ThreadLocal<Map<String, Object>> PER_THREAD_INSTANCES = ThreadLocal.withInitial(HashMap::new);
 
+    static ThreadLocal<Function<Class, Object>> MOCKER = new ThreadLocal<>();
+
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T getInstance(Class<T> injectedClass, Optional<String> name, Supplier<? extends T> supplier) {
 
         final String key = name.map((n) -> injectedClass.getName() + ":" + n).orElse(injectedClass.getName());
         final Map<String, Object> instances = PER_THREAD_INSTANCES.get();
 
-        @SuppressWarnings("unchecked")
         T instance = (T) instances.get(key);
 
         if (instance == null) {
-            instance = createInstance(key, supplier);
+            if (MOCKER.get() != null) {
+                instance = (T) MOCKER.get().apply(injectedClass);
+            } else {
+                instance = createInstance(key, supplier);
+            }
             instances.put(key, instance);
         }
 
@@ -34,13 +41,31 @@ public class TestScope extends AbstractScope {
         instances.put(instance.getClass().getName(), instance);
     }
 
-    public void reset() {
+    @Override
+    public <T> void bind(final Class<? super T> injectedClass, final T instance) {
 
-        PER_THREAD_INSTANCES.remove();
+        final Map<String, Object> instances = PER_THREAD_INSTANCES.get();
+        instances.put(Objects.requireNonNull(injectedClass).getName(), Objects.requireNonNull(instance));
     }
 
-    public void define(final String name, final Object instance) {
+    public <T> T bindMock(final Class<T> injectedClass) {
 
-        PER_THREAD_INSTANCES.get().put(name, instance);
+        if (MOCKER.get() == null) {
+            throw new RuntimeException("No mocker defined");
+        }
+        @SuppressWarnings("unchecked")
+        T instance = (T) MOCKER.get().apply(injectedClass);
+        bind(injectedClass, instance);
+        return instance;
+    }
+
+    public void reset(final Function<Class, Object> mocker) {
+
+        PER_THREAD_INSTANCES.remove();
+        if (mocker != null) {
+            MOCKER.set(mocker);
+        } else {
+            MOCKER.remove();
+        }
     }
 }

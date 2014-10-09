@@ -1,5 +1,7 @@
 package de.leanovate.pragmatic.ioc;
 
+import java.util.function.Function;
+
 public class TestInjectors {
     public static final TestScope TEST_SCOPE = new TestScope();
 
@@ -16,9 +18,27 @@ public class TestInjectors {
         TEST_SCOPE.bind(instance);
     }
 
+    public static <T> void bind(Class<? super T> injectedClass, T instance) {
+
+        init();
+        TEST_SCOPE.bind(injectedClass, instance);
+    }
+
+    public static <T> T bindMock(Class<T> injectedClass) {
+
+        init();
+        return TEST_SCOPE.bindMock(injectedClass);
+    }
+
     public static void reset() {
 
         init();
-        TEST_SCOPE.reset();
+        TEST_SCOPE.reset(null);
+    }
+
+    public static void reset(Function<Class, Object> mocker) {
+
+        init();
+        TEST_SCOPE.reset(mocker);
     }
 }

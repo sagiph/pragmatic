@@ -37,6 +37,12 @@ public class SingletonScope extends AbstractScope {
         addinstance(instance.getClass().getName(), instance);
     }
 
+    @Override
+    public <T> void bind(final Class<? super T> injectedClass, final T instance) {
+
+        addinstance(Objects.requireNonNull(injectedClass).getName(), Objects.requireNonNull(instance));
+    }
+
     private synchronized void addinstance(final String key, final Object instance) {
         final Map<String, Object> newInstances = new HashMap<>();
         newInstances.put(key, instance);
