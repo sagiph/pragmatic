@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 /**
  * Generic scope of injection.
- * 
+ *
  * This is primarily used by {@link de.leanovate.pragmatic.ioc.ScopedInjector}.
  */
 public interface Scope {
