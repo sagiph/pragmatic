@@ -1,13 +1,16 @@
 package de.leanovate.pragmatic.ioc;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 public class SingletonScope extends AbstractScope {
-    private volatile Map<String, Object> instances = new HashMap<>();
+    private Map<String, Object> instances = new ConcurrentHashMap<>();
+
+    private final ReentrantLock createLock = new ReentrantLock();
 
     @Override
     @SuppressWarnings("unchecked")
@@ -18,13 +21,16 @@ public class SingletonScope extends AbstractScope {
         T instance = (T) instances.get(key);
 
         if (instance == null) {
-            synchronized (this) {
+            createLock.lock();
+            try {
                 instance = (T) instances.get(key);
 
                 if (instance == null) {
                     instance = createInstance(key, supplier);
-                    addinstance(key, instance);
+                    instances.put(key, instance);
                 }
+            } finally {
+                createLock.unlock();
             }
         }
         return instance;
@@ -34,18 +40,13 @@ public class SingletonScope extends AbstractScope {
     public void bind(final Object instance) {
 
         Objects.requireNonNull(instance);
-        addinstance(instance.getClass().getName(), instance);
+        instances.put(instance.getClass().getName(), instance);
     }
 
     @Override
     public <T> void bind(final Class<? super T> injectedClass, final T instance) {
 
-        addinstance(Objects.requireNonNull(injectedClass).getName(), Objects.requireNonNull(instance));
+        instances.put(Objects.requireNonNull(injectedClass).getName(), Objects.requireNonNull(instance));
     }
 
-    private synchronized void addinstance(final String key, final Object instance) {
-        final Map<String, Object> newInstances = new HashMap<>(instances);
-        newInstances.put(key, instance);
-        this.instances = newInstances;
-    }
 }
